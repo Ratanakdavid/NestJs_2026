@@ -1,71 +1,72 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+
+import { Post } from './entities/post.entity';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 
-export interface Post {
-  id: number;
-  title: string;
-  content: string;
-}
-
 @Injectable()
 export class PostsService {
-  private posts: Post[] = [];
+  constructor(
+    @InjectRepository(Post)
+    private readonly postRepository: Repository<Post>,
+  ) {}
 
-  private nextId = 1;
+  async create(
+    createPostDto: CreatePostDto,
+  ): Promise<Post> {
+    const post = this.postRepository.create(
+      createPostDto,
+    );
 
-  create(createPostDto: CreatePostDto): Post {
-    const newPost: Post = {
-      id: this.nextId++,
-      title: createPostDto.title,
-      content: createPostDto.content,
-    };
-
-    this.posts.push(newPost);
-
-    return newPost;
+    return this.postRepository.save(post);
   }
 
-  findAll(): Post[] {
-    return this.posts;
+  async findAll(): Promise<Post[]> {
+    return this.postRepository.find({
+      order: {
+        createdAt: 'DESC',
+      },
+    });
   }
 
-  findOne(id: number): Post {
-    const post = this.posts.find((post) => post.id === id);
+  async findOne(id: number): Promise<Post> {
+    const post = await this.postRepository.findOne({
+      where: {
+        id,
+      },
+    });
 
     if (!post) {
-      throw new NotFoundException(`Post with ID ${id} not found`);
+      throw new NotFoundException(
+        `Post with ID ${id} not found`,
+      );
     }
 
     return post;
   }
 
-  update(id: number, updatePostDto: UpdatePostDto): Post {
-    const post = this.findOne(id);
+  async update(
+    id: number,
+    updatePostDto: UpdatePostDto,
+  ): Promise<Post> {
+    const post = await this.findOne(id);
 
-    if (updatePostDto.title !== undefined) {
-      post.title = updatePostDto.title;
-    }
+    Object.assign(post, updatePostDto);
 
-    if (updatePostDto.content !== undefined) {
-      post.content = updatePostDto.content;
-    }
-
-    return post;
+    return this.postRepository.save(post);
   }
 
-  remove(id: number): {
-    deleted: boolean;
-    post: Post;
-  } {
-    const post = this.findOne(id);
+  async remove(id: number): Promise<Post> {
+    const post = await this.findOne(id);
 
-    this.posts = this.posts.filter((post) => post.id !== id);
+    await this.postRepository.remove(post);
 
-    return {
-      deleted: true,
-      post,
-    };
+    return post;
   }
 }

@@ -15,11 +15,17 @@ import { UpdatePostDto } from './dto/update-post.dto';
 
 @Controller('posts')
 export class PostsController {
-  constructor(private readonly postsService: PostsService) {}
+  constructor(
+    private readonly postsService: PostsService,
+  ) {}
 
   @Post()
-  create(@Body() createPostDto: CreatePostDto) {
-    return this.postsService.create(createPostDto);
+  create(
+    @Body() createPostDto: CreatePostDto,
+  ) {
+    return this.postsService.create(
+      createPostDto,
+    );
   }
 
   @Get()
@@ -28,7 +34,9 @@ export class PostsController {
   }
 
   @Get(':id')
-  findOne(@Param('id', ParseIntPipe) id: number) {
+  findOne(
+    @Param('id', ParseIntPipe) id: number,
+  ) {
     return this.postsService.findOne(id);
   }
 
@@ -37,11 +45,16 @@ export class PostsController {
     @Param('id', ParseIntPipe) id: number,
     @Body() updatePostDto: UpdatePostDto,
   ) {
-    return this.postsService.update(id, updatePostDto);
+    return this.postsService.update(
+      id,
+      updatePostDto,
+    );
   }
 
   @Delete(':id')
-  remove(@Param('id', ParseIntPipe) id: number) {
+  remove(
+    @Param('id', ParseIntPipe) id: number,
+  ) {
     return this.postsService.remove(id);
   }
 }
